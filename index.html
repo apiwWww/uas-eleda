@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard Realtime - GitHub + Gauge</title>
+  <title>Dashboard Monitoring Realtime</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
@@ -15,7 +15,7 @@
     }
     h1 {
       color: #007bff;
-      margin-bottom: 30px;
+      margin-bottom: 15px;
     }
     .dashboard {
       display: flex;
@@ -47,14 +47,11 @@
       color: #6c757d;
       margin-bottom: 15px;
     }
-
-    /* Gauge SVG styling */
     .gauge {
       width: 180px;
       height: 90px;
       margin: 10px auto 20px;
     }
-
     canvas {
       margin-top: 10px;
       height: 150px !important;
@@ -72,7 +69,7 @@
     <svg class="gauge" viewBox="0 0 200 100">
       <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
       <path id="arc-voltage" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#007bff" stroke-width="20" stroke-linecap="round"/>
-      <line id="needle-voltage" x1="100" y1="100" x2="100" y2="30" stroke="#dc3545" stroke-width="3"/>
+      <line id="needle-voltage" x1="100" y1="100" x2="100" y2="30" stroke="#dc3545" stroke-width="3" stroke-linecap="round" transform="rotate(0 100 100)" />
       <circle cx="100" cy="100" r="6" fill="#333"/>
     </svg>
     <canvas id="voltageChart"></canvas>
@@ -84,7 +81,7 @@
     <svg class="gauge" viewBox="0 0 200 100">
       <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
       <path id="arc-current" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#28a745" stroke-width="20" stroke-linecap="round"/>
-      <line id="needle-current" x1="100" y1="100" x2="100" y2="30" stroke="#dc3545" stroke-width="3"/>
+      <line id="needle-current" x1="100" y1="100" x2="100" y2="30" stroke="#dc3545" stroke-width="3" stroke-linecap="round" transform="rotate(0 100 100)" />
       <circle cx="100" cy="100" r="6" fill="#333"/>
     </svg>
     <canvas id="currentChart"></canvas>
@@ -96,7 +93,7 @@
     <svg class="gauge" viewBox="0 0 200 100">
       <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
       <path id="arc-power" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#ffc107" stroke-width="20" stroke-linecap="round"/>
-      <line id="needle-power" x1="100" y1="100" x2="100" y2="30" stroke="#dc3545" stroke-width="3"/>
+      <line id="needle-power" x1="100" y1="100" x2="100" y2="30" stroke="#dc3545" stroke-width="3" stroke-linecap="round" transform="rotate(0 100 100)" />
       <circle cx="100" cy="100" r="6" fill="#333"/>
     </svg>
     <canvas id="powerChart"></canvas>
@@ -108,7 +105,7 @@
     <svg class="gauge" viewBox="0 0 200 100">
       <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
       <path id="arc-resistance" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#dc3545" stroke-width="20" stroke-linecap="round"/>
-      <line id="needle-resistance" x1="100" y1="100" x2="100" y2="30" stroke="#dc3545" stroke-width="3"/>
+      <line id="needle-resistance" x1="100" y1="100" x2="100" y2="30" stroke="#dc3545" stroke-width="3" stroke-linecap="round" transform="rotate(0 100 100)" />
       <circle cx="100" cy="100" r="6" fill="#333"/>
     </svg>
     <canvas id="resistanceChart"></canvas>
@@ -116,22 +113,14 @@
 </div>
 
 <script>
-// ✅ URL CSV
-const CSV_URL = "https://raw.githubusercontent.com/apiwWww/uas-eleda/refs/heads/main/data_simulasi.csv";
-
-// Konfigurasi maksimum untuk gauge
-const MAX_VALUES = {
-  voltage: 300,
-  current: 10,
-  power: 3000,
-  resistance: 300
-};
-
+// Konfigurasi
+const CSV_URL = "https://raw.githubusercontent.com/apiwWww/tugas-uas-elektronika-daya/refs/heads/main/data_simulasi.csv";
+const MAX_VALUES = { voltage: 300, current: 10, power: 3000, resistance: 300 };
 let allRows = [];
 let startTime = null;
 const MAX_POINTS = 30;
 
-// Fungsi bantu untuk SVG arc
+// Fungsi bantu SVG
 function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
   return {
@@ -139,7 +128,6 @@ function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
     y: centerY + (radius * Math.sin(angleInRadians))
   };
 }
-
 function describeArc(x, y, radius, startAngle, endAngle) {
   const start = polarToCartesian(x, y, radius, endAngle);
   const end = polarToCartesian(x, y, radius, startAngle);
@@ -150,22 +138,23 @@ function describeArc(x, y, radius, startAngle, endAngle) {
 // Inisialisasi chart
 const metrics = ['voltage', 'current', 'power', 'resistance'];
 const charts = {};
+const colors = {
+  voltage: 'rgba(0,123,255,1)',
+  current: 'rgba(40,167,69,1)',
+  power: 'rgba(255,193,7,1)',
+  resistance: 'rgba(220,53,69,1)'
+};
 
 metrics.forEach(metric => {
-  const color = 
-    metric === 'voltage' ? 'rgba(0,123,255,1)' :
-    metric === 'current' ? 'rgba(40,167,69,1)' :
-    metric === 'power'    ? 'rgba(255,193,7,1)' : 'rgba(220,53,69,1)';
-  
   const ctx = document.getElementById(`${metric}Chart`).getContext('2d');
   charts[metric] = new Chart(ctx, {
     type: 'line',
-    data: {
+     {
       labels: [],
       datasets: [{
-        data: [],
-        borderColor: color,
-        backgroundColor: color.replace('1)', '0.1)'),
+         [],
+        borderColor: colors[metric],
+        backgroundColor: colors[metric].replace('1)', '0.1)'),
         borderWidth: 2,
         tension: 0.4,
         pointRadius: 0
@@ -198,41 +187,31 @@ function parseCSV(text) {
   });
 }
 
-// Update tampilan
+// Update dashboard
 function updateDashboard(index) {
   if (index >= allRows.length) return;
-
   const row = allRows[index];
   const V = row.voltage;
   const I = row.current;
   const P = row.power;
   const R = I > 0.01 ? V / I : 0;
-
   const values = { voltage: V, current: I, power: P, resistance: R };
 
   metrics.forEach(metric => {
     const val = values[metric];
     const max = MAX_VALUES[metric];
-
-    // Update angka
     document.getElementById(`${metric}Val`).textContent = val.toFixed(2);
 
-    // Update gauge SVG
-    const capped = Math.min(Math.max(0, val), max);
-    const percent = capped / max;
-    const angle = percent * 180; // 0–180°
-
     // Update arc
-    const arcPath = describeArc(100, 100, 80, 0, angle);
-    document.getElementById(`arc-${metric}`).setAttribute('d', arcPath);
+    const capped = Math.min(Math.max(0, val), max);
+    const angle = (capped / max) * 180;
+    document.getElementById(`arc-${metric}`).setAttribute('d', describeArc(100, 100, 80, 0, angle));
 
     // Update needle
-    const needleAngle = angle - 90; // SVG starts at top (90° offset)
-    const radians = needleAngle * Math.PI / 180;
-    const nx = 100 + 70 * Math.cos(radians);
-    const ny = 100 + 70 * Math.sin(radians);
-    document.getElementById(`needle-${metric}`).setAttribute('x2', nx);
-    document.getElementById(`needle-${metric}`).setAttribute('y2', ny);
+    const needleLine = document.getElementById(`needle-${metric}`);
+    if (needleLine) {
+      needleLine.setAttribute('transform', `rotate(${angle - 90} 100 100)`);
+    }
 
     // Update chart
     const dataset = charts[metric].data.datasets[0].data;
@@ -247,30 +226,27 @@ function updateDashboard(index) {
   });
 }
 
-// Load CSV
+// Load data
 async function init() {
   try {
     const res = await fetch(`${CSV_URL}?t=${Date.now()}`);
     const csvText = await res.text();
     allRows = parseCSV(csvText);
-    console.log(`✅ ${allRows.length} baris data dimuat`);
     startTime = Date.now();
     updateDashboard(0);
   } catch (err) {
-    console.error("❌ Gagal memuat CSV:", err);
+    console.error("Gagal memuat data:", err);
   }
 }
 
-// Jalankan tiap detik
-function playData() {
+// Main loop
+init();
+setInterval(() => {
   if (allRows.length === 0) return;
   const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
   const index = Math.min(elapsedSec, allRows.length - 1);
   updateDashboard(index);
-}
-
-init();
-setInterval(playData, 1000);
+}, 1000);
 </script>
 
 </body>
