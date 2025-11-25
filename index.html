@@ -1,0 +1,145 @@
+<script>
+const CSV_URL = "https://raw.githubusercontent.com/apiwWww/uas-eleda/refs/heads/main/data_simulasi.csv";
+
+const MAX_VALUES = {
+  voltage: 300,
+  current: 10,
+  power: 3000,
+  resistance: 300
+};
+
+let allRows = [];
+let startTime = null;
+const MAX_POINTS = 30;
+
+function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+  const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+  return {
+    x: centerX + (radius * Math.cos(angleInRadians)),
+    y: centerY + (radius * Math.sin(angleInRadians))
+  };
+}
+
+function describeArc(x, y, radius, startAngle, endAngle) {
+  const start = polarToCartesian(x, y, radius, endAngle);
+  const end = polarToCartesian(x, y, radius, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+  return ["M", start.x, start.y, "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y].join(" ");
+}
+
+const metrics = ['voltage', 'current', 'power', 'resistance'];
+const charts = {};
+
+metrics.forEach(metric => {
+  const color = 
+    metric === 'voltage' ? 'rgba(0,123,255,1)' :
+    metric === 'current' ? 'rgba(40,167,69,1)' :
+    metric === 'power'    ? 'rgba(255,193,7,1)' : 'rgba(220,53,69,1)';
+  
+  const ctx = document.getElementById(`${metric}Chart`).getContext('2d');
+  charts[metric] = new Chart(ctx, {
+    type: 'line',
+     {
+      labels: [],
+      datasets: [{
+         [],
+        borderColor: color,
+        backgroundColor: color.replace('1)', '0.1)'),
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      scales: {
+        y: { beginAtZero: false },
+        x: { display: false }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+});
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  return lines.slice(1).map(line => {
+    const cols = line.split(',');
+    return {
+      time: cols[0],
+      voltage: parseFloat(cols[1]),
+      current: parseFloat(cols[2]),
+      power: parseFloat(cols[3])
+    };
+  });
+}
+
+function updateDashboard(index) {
+  if (index >= allRows.length) return;
+
+  const row = allRows[index];
+  const V = row.voltage;
+  const I = row.current;
+  const P = row.power;
+  const R = I > 0.01 ? V / I : 0;
+
+  const values = { voltage: V, current: I, power: P, resistance: R };
+
+  metrics.forEach(metric => {
+    const val = values[metric];
+    const max = MAX_VALUES[metric];
+
+    document.getElementById(`${metric}Val`).textContent = val.toFixed(2);
+
+    const capped = Math.min(Math.max(0, val), max);
+    const percent = capped / max;
+    const angle = percent * 180;
+
+    // Update arc
+    const arcPath = describeArc(100, 100, 80, 0, angle);
+    document.getElementById(`arc-${metric}`).setAttribute('d', arcPath);
+
+    // Update needle
+    const needleAngle = angle - 90;
+    const needleLine = document.getElementById(`needle-${metric}`);
+    if (needleLine) {
+      needleLine.setAttribute('transform', `rotate(${needleAngle} 100 100)`);
+    }
+
+    // Update chart
+    const dataset = charts[metric].data.datasets[0].data;
+    const labels = charts[metric].data.labels;
+    if (dataset.length >= MAX_POINTS) {
+      dataset.shift();
+      labels.shift();
+    }
+    dataset.push(val);
+    labels.push('');
+    charts[metric].update();
+  });
+}
+
+async function init() {
+  try {
+    const res = await fetch(`${CSV_URL}?t=${Date.now()}`);
+    const csvText = await res.text();
+    allRows = parseCSV(csvText);
+    startTime = Date.now();
+    updateDashboard(0);
+  } catch (err) {
+    console.error("Gagal muat CSV:", err);
+  }
+}
+
+function playData() {
+  if (allRows.length === 0) return;
+  const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+  const index = Math.min(elapsedSec, allRows.length - 1);
+  updateDashboard(index);
+}
+
+init();
+setInterval(playData, 1000);
+</script>
