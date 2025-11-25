@@ -56,6 +56,10 @@
       margin-top: 10px;
       height: 150px !important;
     }
+    /* Animasi halus untuk jarum */
+    .needle {
+      transition: transform 0.3s ease-out;
+    }
   </style>
 </head>
 <body>
@@ -69,7 +73,8 @@
     <svg class="gauge" viewBox="0 0 200 100">
       <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
       <path id="arc-voltage" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#007bff" stroke-width="20" stroke-linecap="round"/>
-      <line id="needle-voltage" x1="100" y1="100" x2="100" y2="30" stroke="#dc3545" stroke-width="3" stroke-linecap="round" transform="rotate(0 100 100)" />
+      <!-- Jarum dimulai dari kiri (x2=20) -->
+      <line class="needle" id="needle-voltage" x1="100" y1="100" x2="20" y2="100" stroke="#dc3545" stroke-width="3" stroke-linecap="round"/>
       <circle cx="100" cy="100" r="6" fill="#333"/>
     </svg>
     <canvas id="voltageChart"></canvas>
@@ -81,7 +86,7 @@
     <svg class="gauge" viewBox="0 0 200 100">
       <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
       <path id="arc-current" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#28a745" stroke-width="20" stroke-linecap="round"/>
-      <line id="needle-current" x1="100" y1="100" x2="100" y2="30" stroke="#dc3545" stroke-width="3" stroke-linecap="round" transform="rotate(0 100 100)" />
+      <line class="needle" id="needle-current" x1="100" y1="100" x2="20" y2="100" stroke="#dc3545" stroke-width="3" stroke-linecap="round"/>
       <circle cx="100" cy="100" r="6" fill="#333"/>
     </svg>
     <canvas id="currentChart"></canvas>
@@ -93,7 +98,7 @@
     <svg class="gauge" viewBox="0 0 200 100">
       <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
       <path id="arc-power" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#ffc107" stroke-width="20" stroke-linecap="round"/>
-      <line id="needle-power" x1="100" y1="100" x2="100" y2="30" stroke="#dc3545" stroke-width="3" stroke-linecap="round" transform="rotate(0 100 100)" />
+      <line class="needle" id="needle-power" x1="100" y1="100" x2="20" y2="100" stroke="#dc3545" stroke-width="3" stroke-linecap="round"/>
       <circle cx="100" cy="100" r="6" fill="#333"/>
     </svg>
     <canvas id="powerChart"></canvas>
@@ -105,7 +110,7 @@
     <svg class="gauge" viewBox="0 0 200 100">
       <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
       <path id="arc-resistance" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#dc3545" stroke-width="20" stroke-linecap="round"/>
-      <line id="needle-resistance" x1="100" y1="100" x2="100" y2="30" stroke="#dc3545" stroke-width="3" stroke-linecap="round" transform="rotate(0 100 100)" />
+      <line class="needle" id="needle-resistance" x1="100" y1="100" x2="20" y2="100" stroke="#dc3545" stroke-width="3" stroke-linecap="round"/>
       <circle cx="100" cy="100" r="6" fill="#333"/>
     </svg>
     <canvas id="resistanceChart"></canvas>
@@ -149,10 +154,10 @@ metrics.forEach(metric => {
   const ctx = document.getElementById(`${metric}Chart`).getContext('2d');
   charts[metric] = new Chart(ctx, {
     type: 'line',
-     {
+    data: {
       labels: [],
       datasets: [{
-         [],
+        data: [],
         borderColor: colors[metric],
         backgroundColor: colors[metric].replace('1)', '0.1)'),
         borderWidth: 2,
@@ -207,10 +212,10 @@ function updateDashboard(index) {
     const angle = (capped / max) * 180;
     document.getElementById(`arc-${metric}`).setAttribute('d', describeArc(100, 100, 80, 0, angle));
 
-    // Update needle
+    // Update needle: 0° = kiri, 180° = kanan
     const needleLine = document.getElementById(`needle-${metric}`);
     if (needleLine) {
-      needleLine.setAttribute('transform', `rotate(${angle - 90} 100 100)`);
+      needleLine.setAttribute('transform', `rotate(${angle} 100 100)`);
     }
 
     // Update chart
