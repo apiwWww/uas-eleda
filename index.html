@@ -14,7 +14,7 @@
       color: #333;
     }
     h1 {
-      color: #007bff;
+      color: #333; /* GANTI DARI #007bff */
       margin-bottom: 15px;
     }
     .dashboard {
@@ -39,7 +39,7 @@
     .value {
       font-size: 28px;
       font-weight: bold;
-      color: #007bff;
+      color: #333; /* GANTI DARI #007bff */
       margin: 10px 0;
     }
     .label {
@@ -72,8 +72,7 @@
     <div class="label">Volts (V)</div>
     <svg class="gauge" viewBox="0 0 200 100">
       <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
-      <path id="arc-voltage" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#007bff" stroke-width="20" stroke-linecap="round"/>
-      <!-- Jarum dimulai dari kiri (x2=20) -->
+      <path id="arc-voltage" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#666" stroke-width="20" stroke-linecap="round"/> <!-- GANTI WARNA -->
       <line class="needle" id="needle-voltage" x1="100" y1="100" x2="20" y2="100" stroke="#dc3545" stroke-width="3" stroke-linecap="round"/>
       <circle cx="100" cy="100" r="6" fill="#333"/>
     </svg>
@@ -85,7 +84,7 @@
     <div class="label">Amperes (A)</div>
     <svg class="gauge" viewBox="0 0 200 100">
       <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
-      <path id="arc-current" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#28a745" stroke-width="20" stroke-linecap="round"/>
+      <path id="arc-current" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#666" stroke-width="20" stroke-linecap="round"/> <!-- GANTI WARNA -->
       <line class="needle" id="needle-current" x1="100" y1="100" x2="20" y2="100" stroke="#dc3545" stroke-width="3" stroke-linecap="round"/>
       <circle cx="100" cy="100" r="6" fill="#333"/>
     </svg>
@@ -97,7 +96,7 @@
     <div class="label">Watts (W)</div>
     <svg class="gauge" viewBox="0 0 200 100">
       <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
-      <path id="arc-power" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#ffc107" stroke-width="20" stroke-linecap="round"/>
+      <path id="arc-power" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#666" stroke-width="20" stroke-linecap="round"/> <!-- GANTI WARNA -->
       <line class="needle" id="needle-power" x1="100" y1="100" x2="20" y2="100" stroke="#dc3545" stroke-width="3" stroke-linecap="round"/>
       <circle cx="100" cy="100" r="6" fill="#333"/>
     </svg>
@@ -109,7 +108,7 @@
     <div class="label">Ohm (Ω)</div>
     <svg class="gauge" viewBox="0 0 200 100">
       <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
-      <path id="arc-resistance" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#dc3545" stroke-width="20" stroke-linecap="round"/>
+      <path id="arc-resistance" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#666" stroke-width="20" stroke-linecap="round"/> <!-- GANTI WARNA -->
       <line class="needle" id="needle-resistance" x1="100" y1="100" x2="20" y2="100" stroke="#dc3545" stroke-width="3" stroke-linecap="round"/>
       <circle cx="100" cy="100" r="6" fill="#333"/>
     </svg>
@@ -119,7 +118,7 @@
 
 <script>
 // Konfigurasi
-const CSV_URL = "https://raw.githubusercontent.com/apiwWww/uas-eleda/refs/heads/main/data_simulasi.csv";
+const CSV_URL = "https://raw.githubusercontent.com/apiwWww/tugas-uas-elektronika-daya/refs/heads/main/data_simulasi.csv";
 const MAX_VALUES = { voltage: 300, current: 10, power: 3000, resistance: 300 };
 let allRows = [];
 let startTime = null;
@@ -144,10 +143,10 @@ function describeArc(x, y, radius, startAngle, endAngle) {
 const metrics = ['voltage', 'current', 'power', 'resistance'];
 const charts = {};
 const colors = {
-  voltage: 'rgba(0,123,255,1)',
-  current: 'rgba(40,167,69,1)',
-  power: 'rgba(255,193,7,1)',
-  resistance: 'rgba(220,53,69,1)'
+  voltage: 'rgba(102,102,102,1)',   // GANTI DARI #007bff → abu-abu
+  current: 'rgba(102,102,102,1)',
+  power: 'rgba(102,102,102,1)',
+  resistance: 'rgba(102,102,102,1)'
 };
 
 metrics.forEach(metric => {
