@@ -1,7 +1,7 @@
 <script>
-// Konfigurasi — PERBAIKAN UTAMA: power max = 300 (bukan 3000)
+// Konfigurasi — tetap pakai power: 300
 const CSV_URL = "https://raw.githubusercontent.com/apiwWww/tugas-uas-elektronika-daya/refs/heads/main/data_simulasi.csv";
-const MAX_VALUES = { voltage: 300, current: 10, power: 300, resistance: 300 }; // power: 3000 → 300
+const MAX_VALUES = { voltage: 300, current: 10, power: 300, resistance: 300 };
 let allRows = [];
 let startTime = null;
 const MAX_POINTS = 30;
@@ -21,12 +21,12 @@ function describeArc(x, y, radius, startAngle, endAngle) {
   return ["M", start.x, start.y, "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y].join(" ");
 }
 
-// Fungsi untuk dapatkan warna arc berdasarkan nilai
+// Fungsi warna arc
 function getArcColor(value, max) {
   const ratio = value / max;
-  if (ratio > 0.7) return '#dc3545'; // merah
-  if (ratio > 0.3) return '#ffc107'; // kuning
-  return '#28a745'; // hijau
+  if (ratio > 0.7) return '#dc3545';
+  if (ratio > 0.3) return '#ffc107';
+  return '#28a745';
 }
 
 // Inisialisasi chart
@@ -88,7 +88,7 @@ function updateDashboard(index) {
   const V = row.voltage;
   const I = row.current;
   const P = row.power;
-  const R = (I > 0.01 && V >= 0) ? V / I : 0; // hindari NaN dan negatif
+  const R = (I > 0.01 && V >= 0) ? V / I : 0;
   const values = { voltage: V, current: I, power: P, resistance: R };
 
   metrics.forEach(metric => {
@@ -96,17 +96,17 @@ function updateDashboard(index) {
     const max = MAX_VALUES[metric];
     document.getElementById(`${metric}Val`).textContent = val.toFixed(2);
 
-    // Update arc panjang & warna
+    // Update arc
     const capped = Math.min(Math.max(0, val), max);
     const angle = (capped / max) * 180;
     const arcPath = document.getElementById(`arc-${metric}`);
     arcPath.setAttribute('d', describeArc(100, 100, 80, 0, angle));
     arcPath.setAttribute('stroke', getArcColor(capped, max));
 
-    // Update needle
-    const needleLine = document.getElementById(`needle-${metric}`);
-    if (needleLine) {
-      needleLine.setAttribute('transform', `rotate(${angle} 100 100)`);
+    // Update needle group (BUKAN line!)
+    const needleGroup = document.getElementById(`needle-group-${metric}`);
+    if (needleGroup) {
+      needleGroup.setAttribute('transform', `rotate(${angle} 100 100)`);
     }
 
     // Update chart
