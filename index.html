@@ -1,125 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard Monitoring Realtime</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f5f7fa;
-      padding: 20px;
-      text-align: center;
-      color: #333;
-    }
-    h1 {
-      color: #333; /* GANTI DARI #007bff */
-      margin-bottom: 15px;
-    }
-    .dashboard {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 25px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 250px;
-      min-height: 420px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .value {
-      font-size: 28px;
-      font-weight: bold;
-      color: #333; /* GANTI DARI #007bff */
-      margin: 10px 0;
-    }
-    .label {
-      font-size: 14px;
-      color: #6c757d;
-      margin-bottom: 15px;
-    }
-    .gauge {
-      width: 180px;
-      height: 90px;
-      margin: 10px auto 20px;
-    }
-    canvas {
-      margin-top: 10px;
-      height: 150px !important;
-    }
-    /* Animasi halus untuk jarum */
-    .needle {
-      transition: transform 0.3s ease-out;
-    }
-  </style>
-</head>
-<body>
-
-<h1>Dashboard Monitoring Realtime (GitHub + Gauge)</h1>
-<div class="dashboard">
-  <div class="card">
-    <h2>Tegangan</h2>
-    <div class="value" id="voltageVal">0.00</div>
-    <div class="label">Volts (V)</div>
-    <svg class="gauge" viewBox="0 0 200 100">
-      <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
-      <path id="arc-voltage" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#666" stroke-width="20" stroke-linecap="round"/> <!-- GANTI WARNA -->
-      <line class="needle" id="needle-voltage" x1="100" y1="100" x2="20" y2="100" stroke="#dc3545" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="100" cy="100" r="6" fill="#333"/>
-    </svg>
-    <canvas id="voltageChart"></canvas>
-  </div>
-  <div class="card">
-    <h2>Arus</h2>
-    <div class="value" id="currentVal">0.00</div>
-    <div class="label">Amperes (A)</div>
-    <svg class="gauge" viewBox="0 0 200 100">
-      <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
-      <path id="arc-current" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#666" stroke-width="20" stroke-linecap="round"/> <!-- GANTI WARNA -->
-      <line class="needle" id="needle-current" x1="100" y1="100" x2="20" y2="100" stroke="#dc3545" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="100" cy="100" r="6" fill="#333"/>
-    </svg>
-    <canvas id="currentChart"></canvas>
-  </div>
-  <div class="card">
-    <h2>Daya</h2>
-    <div class="value" id="powerVal">0.00</div>
-    <div class="label">Watts (W)</div>
-    <svg class="gauge" viewBox="0 0 200 100">
-      <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
-      <path id="arc-power" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#666" stroke-width="20" stroke-linecap="round"/> <!-- GANTI WARNA -->
-      <line class="needle" id="needle-power" x1="100" y1="100" x2="20" y2="100" stroke="#dc3545" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="100" cy="100" r="6" fill="#333"/>
-    </svg>
-    <canvas id="powerChart"></canvas>
-  </div>
-  <div class="card">
-    <h2>Resistansi</h2>
-    <div class="value" id="resistanceVal">0.00</div>
-    <div class="label">Ohm (Ω)</div>
-    <svg class="gauge" viewBox="0 0 200 100">
-      <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#e9ecef" stroke-width="20"/>
-      <path id="arc-resistance" d="M20,100 A80,80 0 0,1 20,100" fill="none" stroke="#666" stroke-width="20" stroke-linecap="round"/> <!-- GANTI WARNA -->
-      <line class="needle" id="needle-resistance" x1="100" y1="100" x2="20" y2="100" stroke="#dc3545" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="100" cy="100" r="6" fill="#333"/>
-    </svg>
-    <canvas id="resistanceChart"></canvas>
-  </div>
-</div>
-
 <script>
-// Konfigurasi
+// Konfigurasi — PERBAIKAN UTAMA: power max = 300 (bukan 3000)
 const CSV_URL = "https://raw.githubusercontent.com/apiwWww/tugas-uas-elektronika-daya/refs/heads/main/data_simulasi.csv";
-const MAX_VALUES = { voltage: 300, current: 10, power: 3000, resistance: 300 };
+const MAX_VALUES = { voltage: 300, current: 10, power: 300, resistance: 300 }; // power: 3000 → 300
 let allRows = [];
 let startTime = null;
 const MAX_POINTS = 30;
@@ -139,11 +21,19 @@ function describeArc(x, y, radius, startAngle, endAngle) {
   return ["M", start.x, start.y, "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y].join(" ");
 }
 
+// Fungsi untuk dapatkan warna arc berdasarkan nilai
+function getArcColor(value, max) {
+  const ratio = value / max;
+  if (ratio > 0.7) return '#dc3545'; // merah
+  if (ratio > 0.3) return '#ffc107'; // kuning
+  return '#28a745'; // hijau
+}
+
 // Inisialisasi chart
 const metrics = ['voltage', 'current', 'power', 'resistance'];
 const charts = {};
 const colors = {
-  voltage: 'rgba(102,102,102,1)',   // GANTI DARI #007bff → abu-abu
+  voltage: 'rgba(102,102,102,1)',
   current: 'rgba(102,102,102,1)',
   power: 'rgba(102,102,102,1)',
   resistance: 'rgba(102,102,102,1)'
@@ -184,9 +74,9 @@ function parseCSV(text) {
     const cols = line.split(',');
     return {
       time: cols[0],
-      voltage: parseFloat(cols[1]),
-      current: parseFloat(cols[2]),
-      power: parseFloat(cols[3])
+      voltage: parseFloat(cols[1]) || 0,
+      current: parseFloat(cols[2]) || 0,
+      power: parseFloat(cols[3]) || 0
     };
   });
 }
@@ -198,7 +88,7 @@ function updateDashboard(index) {
   const V = row.voltage;
   const I = row.current;
   const P = row.power;
-  const R = I > 0.01 ? V / I : 0;
+  const R = (I > 0.01 && V >= 0) ? V / I : 0; // hindari NaN dan negatif
   const values = { voltage: V, current: I, power: P, resistance: R };
 
   metrics.forEach(metric => {
@@ -206,12 +96,14 @@ function updateDashboard(index) {
     const max = MAX_VALUES[metric];
     document.getElementById(`${metric}Val`).textContent = val.toFixed(2);
 
-    // Update arc
+    // Update arc panjang & warna
     const capped = Math.min(Math.max(0, val), max);
     const angle = (capped / max) * 180;
-    document.getElementById(`arc-${metric}`).setAttribute('d', describeArc(100, 100, 80, 0, angle));
+    const arcPath = document.getElementById(`arc-${metric}`);
+    arcPath.setAttribute('d', describeArc(100, 100, 80, 0, angle));
+    arcPath.setAttribute('stroke', getArcColor(capped, max));
 
-    // Update needle: 0° = kiri, 180° = kanan
+    // Update needle
     const needleLine = document.getElementById(`needle-${metric}`);
     if (needleLine) {
       needleLine.setAttribute('transform', `rotate(${angle} 100 100)`);
@@ -252,6 +144,3 @@ setInterval(() => {
   updateDashboard(index);
 }, 1000);
 </script>
-
-</body>
-</html>
