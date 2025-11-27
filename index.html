@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Realtime CSV</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f0f0f0;
+      padding: 20px;
+      text-align: center;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      margin: 15px;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 400px;
+    }
+    .gauge {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 10px solid #ddd;
+      position: relative;
+      margin: auto;
+    }
+    .needle {
+      width: 4px;
+      height: 60px;
+      background: red;
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform-origin: bottom;
+    }
+    .value {
+      font-size: 22px;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Monitoring Data Realtime</h1>
+<p>KELOMPOK 1</p>
+<hr>
+
+<!-- ===================== PARAMETER 1 ====================== -->
+<div class="card">
+  <h2>Tegangan (Volt)</h2>
+  
+  <div class="gauge">
+      <div id="needle1" class="needle"></div>
+  </div>
+  <div id="val1" class="value">--</div>
+
+  <canvas id="chart1" width="350" height="150"></canvas>
+</div>
+
+<!-- ===================== PARAMETER 2 ====================== -->
+<div class="card">
+  <h2>Arus (Ampere)</h2>
+
+  <div class="gauge">
+      <div id="needle2" class="needle"></div>
+  </div>
+  <div id="val2" class="value">--</div>
+  
+  <canvas id="chart2" width="350" height="150"></canvas>
+</div>
+
+<!-- ===================== PARAMETER 3 ====================== -->
+<div class="card">
+  <h2>Daya (Watt)</h2>
+
+  <div class="gauge">
+      <div id="needle3" class="needle"></div>
+  </div>
+  <div id="val3" class="value">--</div>
+  
+  <canvas id="chart3" width="350" height="150"></canvas>
+</div>
+
+<script>
+
+// ====================== LINK CSV ======================
+const CSV_URL = "https://raw.githubusercontent.com/apiwWww/tugas-uas-elektronika-daya/refs/heads/main/data_simulasi%20(2).csv";
+
+// ====================== SETUP CHART ======================
+const chart1 = new Chart(document.getElementById("chart1"), {
+  type: 'line',
+  data: { 
+    labels: [],
+    datasets: [{
+      label: 'Voltage',
+      data: [],
+      borderColor: 'blue',
+      backgroundColor: 'rgba(0,0,255,0.2)',
+      pointRadius: 0,
+      tension: 0.3
+    }]
+  }
+});
+
+const chart2 = new Chart(document.getElementById("chart2"), {
+  type: 'line',
+  data: { 
+    labels: [],
+    datasets: [{
+      label: 'Current',
+      data: [],
+      borderColor: 'green',
+      backgroundColor: 'rgba(0,255,0,0.2)',
+      pointRadius: 0,
+      tension: 0.3
+    }]
+  }
+});
+
+const chart3 = new Chart(document.getElementById("chart3"), {
+  type: 'line',
+  data: { 
+    labels: [],
+    datasets: [{
+      label: 'Power',
+      data: [],
+      borderColor: 'red',
+      backgroundColor: 'rgba(255,0,0,0.2)',
+      pointRadius: 0,
+      tension: 0.3
+    }]
+  }
+});
+
+// ====================== CSV LOADER ======================
+let dataRows = [];
+let index = 0;
+
+async function loadCSV() {
+  const res = await fetch(CSV_URL);
+  const text = await res.text();
+
+  const rows = text.trim().split("\n").map(r => r.split(","));
+  dataRows = rows.slice(1); // skip header
+}
+
+// ====================== UPDATE PER BARIS ======================
+function updateStep() {
+
+  if (index >= dataRows.length) {
+    console.log("SEMUA DATA SUDAH HABIS");
+    return;
+  }
+
+  const row = dataRows[index];
+
+  const time   = row[0];
+  const param1 = parseFloat(row[1]);
+  const param2 = parseFloat(row[2]);
+  const param3 = parseFloat(row[3]);
+
+  // ================= GAUGE ==================
+  updateGauge("needle1", param1);
+  updateGauge("needle2", param2);
+  updateGauge("needle3", param3);
+
+  document.getElementById("val1").textContent = param1.toFixed(2);
+  document.getElementById("val2").textContent = param2.toFixed(2);
+  document.getElementById("val3").textContent = param3.toFixed(2);
+
+  // ================= GRAFIK ==================
+  chart1.data.labels.push(time);
+  chart1.data.datasets[0].data.push(param1);
+  chart1.update();
+
+  chart2.data.labels.push(time);
+  chart2.data.datasets[0].data.push(param2);
+  chart2.update();
+
+  chart3.data.labels.push(time);
+  chart3.data.datasets[0].data.push(param3);
+  chart3.update();
+
+  index++; // maju baris berikutnya
+}
+
+// ====================== GAUGE ROTATION ======================
+function updateGauge(id, value) {
+  const deg = (value / 300) * 180 - 90; 
+  document.getElementById(id).style.transform = `rotate(${deg}deg)`;
+}
+
+// ====================== START ======================
+loadCSV().then(() => {
+  updateStep();
+  setInterval(updateStep, 1000);
+});
+
+</script>
+
+</body>
+</html>
